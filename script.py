@@ -4,11 +4,14 @@ import json
 import pathlib
 import smtplib
 import time
+from datetime import datetime
 
 internet_data = {
 	"email": "", #Change with your own email address if you want to receive emails
 	"hours": 6, #Change if you want a different interval between two different emails
 	"last_hours": {
+		"date": datetime.today().strftime('%Y-%m-%d'),
+		#The download/upload values are in Mbit/s and the ping is measured in ms
 		"avg_download": 0.000,
 		"avg_upload": 0.000,
 		"avg_ping": 0.000,
@@ -25,6 +28,7 @@ times_analyzed = 0
 
 def default_today_dict():
 	d = {
+		"date": datetime.today().strftime('%Y-%m-%d'),
 		"avg_download": 0.000,
 		"avg_upload": 0.000,
 		"avg_ping": 0.000,
@@ -50,10 +54,10 @@ while True:
 	upload = round(st.upload(pre_allocate=False) / 1000000, 3)
 	ping = round(st.results.ping, 3)
 
-	#Calculate average/minimum/maximum
-	last_hours["avg_download"] = ((last_hours["avg_download"]*times_analyzed)+download)/(times_analyzed+1)
-	last_hours["avg_upload"] = ((last_hours["avg_upload"]*times_analyzed)+upload)/(times_analyzed+1)
-	last_hours["avg_ping"] = ((last_hours["avg_ping"]*times_analyzed)+ping)/(times_analyzed+1)
+	#Calculate average/minimum/maximum every cycle (5 minutes)
+	last_hours["avg_download"] = round(((last_hours["avg_download"]*times_analyzed)+download)/(times_analyzed+1), 3)
+	last_hours["avg_upload"] = round(((last_hours["avg_upload"]*times_analyzed)+upload)/(times_analyzed+1), 3)
+	last_hours["avg_ping"] = round(((last_hours["avg_ping"]*times_analyzed)+ping)/(times_analyzed+1), 3)
 	last_hours["min_download"] = min(download, last_hours["min_download"])
 	last_hours["min_upload"] = min(upload, last_hours["min_upload"])
 	last_hours["min_ping"] = min(ping, last_hours["min_ping"])
@@ -62,15 +66,16 @@ while True:
 	last_hours["max_ping"] = max(ping, last_hours["min_ping"])
 	times_analyzed += 1
 
-	#Serialization
-	internet_data["last_hours"] = last_hours
-	path = pathlib.Path(str(pathlib.Path.home())+"/.config/connection-analyzer")
-	path.mkdir(parents=True, exist_ok=True)
-	with open(str(pathlib.Path.home())+"/.config/connection-analyzer/data.json", "w") as outfile:
-		json.dump(internet_data, outfile, indent=4)
+	#Serialization every 3 cycles (15 minutes)
+	if times_analyzed==1 or times_analyzed%3==0:
+		internet_data["last_hours"] = last_hours
+		path = pathlib.Path(str(pathlib.Path.home())+"/.config/connection-analyzer")
+		path.mkdir(parents=True, exist_ok=True)
+		with open(str(pathlib.Path.home())+"/.config/connection-analyzer/internet_data.json", "w") as outfile:
+			json.dump(internet_data, outfile, indent=4)
 	
-	#Send email every X hours (default 8)
-	if times_analyzed % (6*internet_data["hours"]) == 0:
+	#Send email every X hours (default 6)
+	if times_analyzed % (12*internet_data["hours"]) == 0:
 		if internet_data["email"] != "":
 			SERVER = "localhost"
 			FROM = "connection-analyzer@example.com" #TODO
@@ -92,5 +97,5 @@ while True:
 
 	print("Going to sleep")
 
-	#Sleep for 10 minutes before doing another test
-	time.sleep(570) # 570 intead of 600 because it takes about 30 seconds for the code above
+	#Sleep for 5 minutes before doing another test
+	time.sleep(270) # 270 intead of 300 because it takes about 30 seconds for the code above
