@@ -6,7 +6,7 @@ Connection analyzer is a utility tool to monitor your internet connection. It's 
 
 # Installation
 
-To use the script you have to download it (and its dependencies) and give it permissions to execute
+To use the script you have to download it (and its dependencies) and give it permissions to execute.
 ```
 $ pip install speedtest-cli
 $ git clone https://github.com/0xfederama/connection-analyzer.git
@@ -14,7 +14,7 @@ $ cd connection-analyzer
 $ chmod +x script.py
 ```
 Now you can launch the script with  `./script.py`
-If you want to execute the script every time you turn on your computer (or your raspberrypi) you just have to `todo`
+If you want to execute the script every time you turn on your computer (or your raspberrypi) you just have to `todo`.
 
 # Customization
 You can customize the script as you want.
