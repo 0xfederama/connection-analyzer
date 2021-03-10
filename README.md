@@ -20,9 +20,9 @@ If you want to execute the script every time you turn on your computer (or your 
 # Customization
 
 You can customize the script as you want.
-The first thing that you can customize is the email (line 26): if you don't want to receive an email leave the field as it is, otherwise write your own email. If you don't want to receive emails, **only** change this field.
+The first thing that you can customize is the email (line 36): if you don't want to receive an email leave the field as it is, otherwise write your own email. If you don't want to receive emails, **only** change this field.
 
-You can customize also the value of the hours (line 27). With a default value of 6, you will receive an email every 6 hours. After 8 hours, the dictionary will be reset to default values, in order to see if, in a 6-hour span, the connection have had problems (otherwise, the average in a long span of hours will flatten the curve).
+You can customize also the value of the hours (line 37). With a default value of 6, you will receive an email every 6 hours. After 8 hours, the dictionary will be reset to default values, in order to see if, in a 6-hour span, the connection have had problems (otherwise, the average in a long span of hours will flatten the curve).
 
 Since the json file is never read by the program, if you change the values of the json it doesnt affect the program.
 

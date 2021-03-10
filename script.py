@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 
 def default_today_dict():
-	d = {
+	return {
 		"date": datetime.today().strftime('%Y-%m-%d @ %H:%M'),
 		#The download/upload values are in Mbit/s and the ping is measured in ms
 		"avg_download": 0.000,
@@ -20,17 +20,6 @@ def default_today_dict():
 		"min_ping": sys.maxsize,
 		"max_ping": -sys.maxsize
 	}
-	return d
-
-internet_data = {
-	"email": "", #Change with your own email address if you want to receive emails
-	"hours": 6, #Change if you want a different interval between two different emails
-	"last_hours": default_today_dict()
-}
-
-last_hours = internet_data["last_hours"]
-times_analyzed = 0
-issues = 0
 
 #Write dictionary to json
 def serialize(dict, filename):
@@ -42,20 +31,30 @@ def serialize(dict, filename):
 	with open(str(pathlib.Path.home())+"/.config/connection-analyzer/"+filename+".json", "w") as outfile:
 		json.dump(dict, outfile, indent=4)
 
+#Variables initialization
+internet_data = {
+	"email": "", #Change with your own email address if you want to receive emails
+	"hours": 6, #Change if you want a different interval between two different emails
+	"last_hours": default_today_dict()
+}
+last_hours = internet_data["last_hours"]
+times_analyzed = 0
+issues = 0
+st = speedtest.Speedtest()
+
 #Main cycle
 while True:
 
-	#Launch the speedtest and calculate speed
-	st = speedtest.Speedtest()
+	download = round(st.download() / 1000000, 2)
+	upload = round(st.upload(pre_allocate=False) / 1000000, 2)
 	try:
 		st.get_best_server()
 	except speedtest.SpeedtestBestServerFailure:
 		continue
-	download = round(st.download() / 1000000, 2)
-	upload = round(st.upload(pre_allocate=False) / 1000000, 2)
 	ping = round(st.results.ping, 2)
 
 	#Calculate average/minimum/maximum every cycle (5 minutes)
+	last_hours["date"] = datetime.today().strftime('%Y-%m-%d @ %H:%M')
 	last_hours["avg_download"] = round(((last_hours["avg_download"]*times_analyzed)+download)/(times_analyzed+1), 2)
 	last_hours["avg_upload"] = round(((last_hours["avg_upload"]*times_analyzed)+upload)/(times_analyzed+1), 2)
 	last_hours["avg_ping"] = round(((last_hours["avg_ping"]*times_analyzed)+ping)/(times_analyzed+1), 2)
@@ -65,11 +64,10 @@ while True:
 	last_hours["max_download"] = max(download, last_hours["min_download"])
 	last_hours["max_upload"] = max(upload, last_hours["min_upload"])
 	last_hours["max_ping"] = max(ping, last_hours["min_ping"])
-	last_hours["date"] = datetime.today().strftime('%Y-%m-%d @ %H:%M')
 	internet_data["last_hours"] = last_hours
 	times_analyzed += 1
 
-	#Check if the speed dropped at about 75% in the last test. If so, save a new json
+	#If the speed dropped at about 75% in the last test save a new json
 	if download < 0.25*last_hours["avg_download"] or upload < 0.25*last_hours["avg_upload"] or ping > 1.75*last_hours["avg_ping"]:
 		issue_data = {
 			"email": internet_data["email"],
@@ -84,7 +82,7 @@ while True:
 				"issue_ping": ping
 			}	
 		}
-		serialize(issue_data, "issues/issue_"+datetime.today().strftime('%Y-%m-%d'))
+		serialize(issue_data, "issues/issue_"+datetime.today().strftime('%Y-%m-%d_%H:%M'))
 		issues+=1
 
 	#Serialization at startup and every 3 cycles (15 minutes)
