@@ -1,10 +1,9 @@
-import speedtest
-import sys
-import json
-import pathlib
-import smtplib
-import time
+import speedtest, sys, json, pathlib, time, smtplib, ssl
 from datetime import datetime
+
+email = "" #Change with your own email address if you want to receive emails
+password = "" #Change if you want a different interval between two different emails
+hours = 6
 
 def default_today_dict():
 	return {
@@ -33,8 +32,8 @@ def serialize(dict, filename):
 
 #Variables initialization
 internet_data = {
-	"email": "", #Change with your own email address if you want to receive emails
-	"hours": 6, #Change if you want a different interval between two different emails
+	"email": email,
+	"hours": hours, 
 	"last_hours": default_today_dict()
 }
 last_hours = internet_data["last_hours"]
@@ -45,12 +44,12 @@ st = speedtest.Speedtest()
 #Main cycle
 while True:
 
-	download = round(st.download() / 1000000, 2)
-	upload = round(st.upload(pre_allocate=False) / 1000000, 2)
 	try:
 		st.get_best_server()
 	except speedtest.SpeedtestBestServerFailure:
-		continue
+		continue	
+	download = round(st.download() / 1000000, 2)
+	upload = round(st.upload(pre_allocate=False) / 1000000, 2)
 	ping = round(st.results.ping, 2)
 
 	#Calculate average/minimum/maximum every cycle (5 minutes)
@@ -90,29 +89,29 @@ while True:
 		internet_data["last_hours"] = last_hours
 		serialize(internet_data, "internet_data")
 	
-	#Send email every X hours (default 6) 
-	#TODO
-	if times_analyzed % (12*internet_data["hours"]) == 0:
-		if internet_data["email"] != "":
-			SERVER = "localhost"
-			FROM = "connection-analyzer@example.com"
-			TO = [internet_data["email"]]
-			SUBJECT = "Your connection data of the last 8 hours"
-			TEXT = (f"""In the last {internet_data["hours"]} hours, your average speed is been {last_hours["avg_download"]} MBit/s"""
+	#Send email every X hours (default 6) and reset the dictionary
+	if times_analyzed % (12*hours) == 0:
+		#FIXME Send email
+		'''
+		if email != "":
+			print("Sending email")
+			server_smtp = "smtp.gmail.com"
+			sender = email
+			sender_pw = password
+			receiver = [email]
+			message = (f"\nSubject: Your connection speed of the last {hours} hours\n\n"
+				f"""In the last {hours} hours, your average speed is been {last_hours["avg_download"]} MBit/s"""
 				f""" in download, {last_hours["avg_upload"]} MBit/s in upload with a ping of {last_hours["avg_ping"]} ms.\nYou have had"""
 				f""" {issues} issues. Your best values for download, upload and ping were {last_hours["max_download"]} Mbit/s,"""
 				f""" {last_hours["max_upload"]} Mbit/s and {last_hours["min_ping"]} ms, while the worst values were {last_hours["min_download"]}"""
 				f""" Mbit/s, {last_hours["min_upload"]} Mbit/s and {last_hours["max_ping"]} ms""")
-			message = """\
-			From: %s
-			To: %s
-			Subject: %s
-
-			%s
-			""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
-			server = smtplib.SMTP(SERVER, 10000) #FIXME gives connection refused error (errno 111)
-			server.sendmail(FROM, TO, message)
+			context = ssl.create_default_context()
+			with smtplib.SMTP_SSL(server_smtp, 465, context=context) as server:
+				server.login(sender, sender_pw)
+				server.sendmail(sender, receiver, message)
 			server.quit()
+			print("Email sent")
+		'''
 		last_hours = default_today_dict() #Reset dictionary to default every X hours
 
 	#DEBUG
