@@ -110,8 +110,7 @@ while True:
 
 			%s
 			""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
-			#FIXME gives connection refused error (errno 111)
-			server = smtplib.SMTP(SERVER, 10000)
+			server = smtplib.SMTP(SERVER, 10000) #FIXME gives connection refused error (errno 111)
 			server.sendmail(FROM, TO, message)
 			server.quit()
 		last_hours = default_today_dict() #Reset dictionary to default every X hours
