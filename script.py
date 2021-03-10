@@ -92,7 +92,8 @@ while True:
 		internet_data["last_hours"] = last_hours
 		serialize(internet_data, "internet_data")
 	
-	#Send email every X hours (default 6) #TODO
+	#Send email every X hours (default 6) 
+	#TODO
 	if times_analyzed % (12*internet_data["hours"]) is 0:
 		if internet_data["email"] is not "":
 			SERVER = "localhost"
@@ -111,6 +112,7 @@ while True:
 
 			%s
 			""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
+			#FIXME gives connection refused error (errno 111)
 			server = smtplib.SMTP(SERVER, 10000)
 			server.sendmail(FROM, TO, message)
 			server.quit()
