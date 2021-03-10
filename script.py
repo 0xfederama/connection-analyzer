@@ -6,29 +6,10 @@ import smtplib
 import time
 from datetime import datetime
 
-internet_data = {
-	"email": "", #Change with your own email address if you want to receive emails
-	"hours": 6, #Change if you want a different interval between two different emails
-	"last_hours": {
-		"date": datetime.today().strftime('%Y-%m-%d @ %H:%M'),
-		#The download/upload values are in Mbit/s and the ping is measured in ms
-		"avg_download": 0.000,
-		"avg_upload": 0.000,
-		"avg_ping": 0.000,
-		"min_download": sys.maxsize,
-		"max_download": -sys.maxsize,
-		"min_upload": sys.maxsize,
-		"max_upload": -sys.maxsize,
-		"min_ping": sys.maxsize,
-		"max_ping": -sys.maxsize}	
-}
-
-last_hours = internet_data["last_hours"]
-times_analyzed = 0
-
 def default_today_dict():
 	d = {
 		"date": datetime.today().strftime('%Y-%m-%d @ %H:%M'),
+		#The download/upload values are in Mbit/s and the ping is measured in ms
 		"avg_download": 0.000,
 		"avg_upload": 0.000,
 		"avg_ping": 0.000,
@@ -41,15 +22,30 @@ def default_today_dict():
 	}
 	return d
 
-def serialize(filename):
+internet_data = {
+	"email": "", #Change with your own email address if you want to receive emails
+	"hours": 6, #Change if you want a different interval between two different emails
+	"last_hours": default_today_dict()
+}
+
+last_hours = internet_data["last_hours"]
+times_analyzed = 0
+issues = 0
+
+#Write dictionary to json
+def serialize(dict, filename):
 	path = pathlib.Path(str(pathlib.Path.home())+"/.config/connection-analyzer")
 	path.mkdir(parents=True, exist_ok=True)
+	if "issue" in filename:
+		path_issue = pathlib.Path(str(pathlib.Path.home())+"/.config/connection-analyzer/issues")
+		path_issue.mkdir(parents=True, exist_ok=True)
 	with open(str(pathlib.Path.home())+"/.config/connection-analyzer/"+filename+".json", "w") as outfile:
-		json.dump(internet_data, outfile, indent=4)
+		json.dump(dict, outfile, indent=4)
 
+#Main cycle
 while True:
 
-	#Launch the speedtest
+	#Launch the speedtest and calculate speed
 	st = speedtest.Speedtest()
 	try:
 		st.get_best_server()
@@ -69,26 +65,45 @@ while True:
 	last_hours["max_download"] = max(download, last_hours["min_download"])
 	last_hours["max_upload"] = max(upload, last_hours["min_upload"])
 	last_hours["max_ping"] = max(ping, last_hours["min_ping"])
-	times_analyzed += 1
+	last_hours["date"] = datetime.today().strftime('%Y-%m-%d @ %H:%M')
 	internet_data["last_hours"] = last_hours
+	times_analyzed += 1
 
-	#Check if the speed dropped at about 50% in the last test. If so, save a new json
-	if download < 0.5*last_hours["avg_download"] or upload < 0.5*last_hours["avg_upload"] or ping > 2*last_hours["avg_ping"]:
-		serialize("issues_"+datetime.today().strftime('%Y-%m-%d'))
+	#Check if the speed dropped at about 75% in the last test. If so, save a new json
+	if download < 0.25*last_hours["avg_download"] or upload < 0.25*last_hours["avg_upload"] or ping > 1.75*last_hours["avg_ping"]:
+		issue_data = {
+			"email": internet_data["email"],
+			"hours": internet_data["hours"],
+			"issue": {
+				"date": datetime.today().strftime('%Y-%m-%d @ %H:%M'),
+				"avg_download": last_hours["avg_download"],
+				"avg_upload": last_hours["avg_upload"],
+				"avg_ping": last_hours["avg_ping"],
+				"issue_download": download,
+				"issue_upload": upload,
+				"issue_ping": ping
+			}	
+		}
+		serialize(issue_data, "issues/issue_"+datetime.today().strftime('%Y-%m-%d'))
+		issues+=1
 
 	#Serialization at startup and every 3 cycles (15 minutes)
 	if times_analyzed==1 or times_analyzed%3==0:
 		internet_data["last_hours"] = last_hours
-		serialize("internet_data")
+		serialize(internet_data, "internet_data")
 	
-	#Send email every X hours (default 6)
-	if times_analyzed % (12*internet_data["hours"]) == 0:
-		if internet_data["email"] != "":
+	#Send email every X hours (default 6) #TODO
+	if times_analyzed % (12*internet_data["hours"]) is 0:
+		if internet_data["email"] is not "":
 			SERVER = "localhost"
-			FROM = "connection-analyzer@example.com" #TODO
+			FROM = "connection-analyzer@example.com"
 			TO = [internet_data["email"]]
 			SUBJECT = "Your connection data of the last 8 hours"
-			TEXT = "This message is sent automatically" #TODO
+			TEXT = (f"""In the last {internet_data["hours"]} hours, your average speed is been {last_hours["avg_download"]} MBit/s"""
+				f""" in download, {last_hours["avg_upload"]} MBit/s in upload with a ping of {last_hours["avg_ping"]} ms.\nYou have had"""
+				f""" {issues} issues. Your best values for download, upload and ping were {last_hours["max_download"]} Mbit/s,"""
+				f""" {last_hours["max_upload"]} Mbit/s and {last_hours["min_ping"]} ms, while the worst values were {last_hours["min_download"]}"""
+				f""" Mbit/s, {last_hours["min_upload"]} Mbit/s and {last_hours["max_ping"]} ms""")
 			message = """\
 			From: %s
 			To: %s
@@ -99,9 +114,9 @@ while True:
 			server = smtplib.SMTP(SERVER, 10000)
 			server.sendmail(FROM, TO, message)
 			server.quit()
-			print("Email sent")
 		last_hours = default_today_dict()
 
+	#DEBUG
 	print("Time to sleep")
 
 	#Sleep for 5 minutes before doing another test
