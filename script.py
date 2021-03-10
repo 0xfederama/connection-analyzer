@@ -94,8 +94,8 @@ while True:
 	
 	#Send email every X hours (default 6) 
 	#TODO
-	if times_analyzed % (12*internet_data["hours"]) is 0:
-		if internet_data["email"] is not "":
+	if times_analyzed % (12*internet_data["hours"]) == 0:
+		if internet_data["email"] != "":
 			SERVER = "localhost"
 			FROM = "connection-analyzer@example.com"
 			TO = [internet_data["email"]]
@@ -116,7 +116,7 @@ while True:
 			server = smtplib.SMTP(SERVER, 10000)
 			server.sendmail(FROM, TO, message)
 			server.quit()
-		last_hours = default_today_dict()
+		last_hours = default_today_dict() #Reset dictionary to default every X hours
 
 	#DEBUG
 	print("Time to sleep")
