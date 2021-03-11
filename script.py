@@ -112,7 +112,9 @@ while True:
 			server.quit()
 			print("Email sent")
 		'''
-		last_hours = default_today_dict() #Reset dictionary to default every X hours
+		#Reset values to default every X hours
+		last_hours = default_today_dict()
+		times_analyzed = 0
 
 	#DEBUG
 	print("Time to sleep")
