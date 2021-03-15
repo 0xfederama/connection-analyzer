@@ -2,8 +2,8 @@ import speedtest, sys, json, pathlib, time, smtplib, ssl
 from datetime import datetime
 
 email = "" #Change with your own email address if you want to receive emails
-password = "" #Change if you want a different interval between two different emails
-hours = 6
+password = "" 
+hours = 6 #Change if you want a different interval between two different emails
 
 def default_today_dict():
 	return {
@@ -51,7 +51,7 @@ while True:
 	download = round(st.download() / 1000000, 2)
 	upload = round(st.upload(pre_allocate=False) / 1000000, 2)
 	ping = round(st.results.ping, 2)
-
+	
 	#Calculate average/minimum/maximum every cycle (5 minutes)
 	last_hours["date"] = datetime.today().strftime('%Y-%m-%d @ %H:%M')
 	last_hours["avg_download"] = round(((last_hours["avg_download"]*times_analyzed)+download)/(times_analyzed+1), 2)
