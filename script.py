@@ -44,6 +44,10 @@ st = speedtest.Speedtest()
 #Main cycle
 while True:
 
+	#Calculate time
+	start = time.time()
+
+	#Speedtest
 	try:
 		st.get_best_server()
 	except speedtest.SpeedtestBestServerFailure:
@@ -116,8 +120,6 @@ while True:
 		last_hours = default_today_dict()
 		times_analyzed = 0
 
-	#DEBUG
-	print("Time to sleep")
-
 	#Sleep for 5 minutes before doing another test
-	time.sleep(270) # 270 intead of 300 because it takes about 30 seconds for the code above
+	end = time.time()
+	time.sleep(300-(end-start))
