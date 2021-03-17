@@ -1,4 +1,4 @@
-import speedtest, sys, json, pathlib, time, smtplib, ssl
+import speedtest, sys, json, pathlib, time, subprocess, smtplib, ssl
 from datetime import datetime
 
 email = "" #Change with your own email address if you want to receive emails
@@ -8,6 +8,7 @@ hours = 6 #Change if you want a different interval between two different emails
 def default_today_dict():
 	return {
 		"date": datetime.today().strftime('%Y-%m-%d @ %H:%M'),
+		"network-name": subprocess.getoutput("iwgetid --raw"), 
 		#The download/upload values are in Mbit/s and the ping is measured in ms
 		"avg_download": 0.000,
 		"avg_upload": 0.000,
@@ -58,6 +59,7 @@ while True:
 	
 	#Calculate average/minimum/maximum every cycle (5 minutes)
 	last_hours["date"] = datetime.today().strftime('%Y-%m-%d @ %H:%M')
+	last_hours["network-name"] = subprocess.getoutput("iwgetid --raw")
 	last_hours["avg_download"] = round(((last_hours["avg_download"]*times_analyzed)+download)/(times_analyzed+1), 2)
 	last_hours["avg_upload"] = round(((last_hours["avg_upload"]*times_analyzed)+upload)/(times_analyzed+1), 2)
 	last_hours["avg_ping"] = round(((last_hours["avg_ping"]*times_analyzed)+ping)/(times_analyzed+1), 2)
@@ -77,6 +79,7 @@ while True:
 			"hours": internet_data["hours"],
 			"issue": {
 				"date": datetime.today().strftime('%Y-%m-%d @ %H:%M'),
+				"network-name": subprocess.getoutput("iwgetid --raw"), 
 				"avg_download": last_hours["avg_download"],
 				"avg_upload": last_hours["avg_upload"],
 				"avg_ping": last_hours["avg_ping"],
