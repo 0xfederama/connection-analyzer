@@ -16,7 +16,7 @@ $ git clone https://github.com/0xfederama/connection-analyzer.git
 $ cd connection-analyzer
 $ chmod +x script.py
 ```
-Now you can launch the script with  `python3 script.py`.
+Now you can launch the script with `python3 script.py`.
 
 If you want to execute the script every time you turn on your computer (or your raspberrypi) you have to add `python3 /absolute/path/to/script.py &` at the end of the file `/etc/rc.local`, just before the line that has `exit 0`, and reboot.
 
