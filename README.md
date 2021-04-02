@@ -34,3 +34,24 @@ Since the json file is never read by the program, if you change the values of th
 When you want to check the latest values of your internet speed, you can view the json file stored in `~/.config/connection-analyzer`. That file will be overwritten the next time that your internet speed is tested (in 15 minutes). 
 
 If you want to save a file, you can just change the name of the json file that you don't want to be overwritten. Anyway, if your connection speed drops by 75%, the script will automatically save a new json with the date of the issue in the same directory.
+
+#### Json example
+```json
+{
+    "email": "",
+    "hours": 6,
+    "last_hours": {
+        "date": "2021-04-02 @ 13:15",
+        "network-name": "Wi-Fi",
+        "avg_download": 46.77,
+        "avg_upload": 19.86,
+        "avg_ping": 22.56,
+        "min_download": 42.1,
+        "max_download": 53.47,
+        "min_upload": 18.23,
+        "max_upload": 22.01,
+        "min_ping": 16.38,
+        "max_ping": 26.98
+    }
+}
+```
