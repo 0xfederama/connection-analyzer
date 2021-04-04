@@ -11,7 +11,7 @@ Connection analyzer is a utility tool to monitor your internet connection. It's 
 
 To use the script you have to download it (and its dependencies) and give it permissions to execute.
 ```
-$ pip install speedtest-cli
+$ pip install speedtest-cli==2.1.2
 $ git clone https://github.com/0xfederama/connection-analyzer.git
 $ cd connection-analyzer
 $ chmod +x script.py
